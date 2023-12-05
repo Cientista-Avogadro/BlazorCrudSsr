@@ -1,0 +1,128 @@
+﻿@page "/edit-game"
+@page "/edit-game/{Id:int}"
+
+@inject NavigationManager navigation
+@inject DataContext Context
+
+@if (Id is null || dbGame is null)
+{
+    <PageTitle>Add a New Video Game</PageTitle>
+
+    if (Id is not null)
+    {
+        <h3 class="text-warning">Game with Id:<span class="fw-bolder text-danger">@Id</span> Not found, please you can add!</h3>
+    }
+
+    <h3>Add a New Video Game</h3>
+
+    
+}
+else
+{
+    <PageTitle>Edit "@CurrentGame.Title"</PageTitle>
+    <h3>Edit "@CurrentGame.Title"</h3>
+}
+
+<EditForm Enhance Model="CurrentGame" OnSubmit="HandleSubmit" FormName="GameForm" class="d-flex flex-column" style="gap:.4rem">
+     <div class="my-3">
+         <label for="title">Title</label>
+         <InputText id="title" @bind-Value="CurrentGame.Title" class="form-control" />
+     </div>
+     <div>
+         <label for="plublisher">Plublisher</label>
+         <InputText id="plublisher" @bind-Value="CurrentGame.Publisher" class="form-control" />
+     </div>
+     <div class="my-3">
+         <label for="releaseYear">Release Yaer</label>
+         <InputNumber id="releaseYear" @bind-Value="CurrentGame.ReleaseYear" class="form-control" />
+     </div>
+
+     <button type="submit" class="btn btn-primary my-3 align-self-start">Save</button>
+ </EditForm>
+
+ <p>@status</p>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; } = null;
+
+    [SupplyParameterFromForm]
+    public VideoGame CurrentGame { get; set; } = new();
+
+    private string status = string.Empty;
+    public VideoGame? dbGame { get; set; } = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        dbGame = await Context.VideoGames.FindAsync(Id);
+
+
+        if (Id is not null || dbGame is not null)
+        {
+            var game = await Context.VideoGames.FindAsync(Id);
+
+            if (game is not null)
+            {
+                CurrentGame.Title ??= game.Title;
+                CurrentGame.Publisher ??= game.Publisher;
+                CurrentGame.ReleaseYear ??= game.ReleaseYear;
+            }
+        }
+    }
+
+    async Task HandleSubmit(EditContext editContext)
+    {
+
+        if (Id is not null)
+        {
+            await UpdateGame();
+        }
+        else
+        {
+            await SaveGame();
+        }
+        navigation.NavigateTo("/games");
+
+
+
+    }
+
+    async Task UpdateGame()
+    {
+        if (dbGame is not null)
+        {
+            dbGame.Title = CurrentGame.Title;
+            dbGame.Publisher = CurrentGame.Publisher;
+            dbGame.ReleaseYear = CurrentGame.ReleaseYear;
+
+            var result = await Context.SaveChangesAsync();
+
+            if (result == 1)
+            {
+                status = "Game Update Succesfully!";
+            }
+            else
+            {
+                status = "Something went wrong... :/";
+            }
+
+        }
+
+    }
+
+    async Task SaveGame()
+    {
+        Context.VideoGames.Add(CurrentGame);
+        var result = await Context.SaveChangesAsync();
+
+        if (result == 1)
+        {
+            status = "Game Added Succesfully!";
+        }
+        else
+        {
+            status = "Something went wrong... :/";
+        }
+
+    }
+}

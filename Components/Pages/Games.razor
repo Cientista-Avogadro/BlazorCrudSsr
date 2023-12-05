@@ -1,0 +1,105 @@
+﻿@page "/games"
+@attribute [StreamRendering]
+@inject DataContext Context
+@inject NavigationManager navigation
+
+<PageTitle>Video Games</PageTitle>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <h3 class="text-success">@message</h3>
+}
+
+<div class="d-flex justify-content-between align-items-baseline my-2">
+    <h3 class="">Games</h3>
+
+    <NavLink class="btn btn-primary" href="edit-game">
+        Add game
+    </NavLink>
+</div>
+
+@if (videoGames.Count == 0)
+{
+    <p><em>Loading Video Games...</em></p>
+}
+else
+{
+    <div class="table-responsive ">
+        <table class="table table-hover table-dark">
+            <thead class="bg-dark text-white text-center">
+                <tr>
+                    <th>Id</th>
+                    <th>Title</th>
+                    <th>Publisher</th>
+                    <th>Release Yaer</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var game in videoGames.Select((g, idx) => (g, idx)))
+                {
+                    string gameId = $"edit-game/{game.g.Id}";
+                    <tr>
+                        <td class="text-center">@(game.idx + 1)</td>
+                        <td>@game.g.Title</td>
+                        <td class="text-center">@game.g.Publisher</td>
+                        <td class="text-center">@game.g.ReleaseYear</td>
+                        <td>
+                            <div class="btn-group gap-3 w-100">
+                                <NavLink class="btn btn-outline-info" href="@gameId">
+                                    Edit
+                                </NavLink>
+                                <form method="post" data-enhance @formname="@($"DeleteGameForm-{game.g.Id}")" @onsubmit="()=> DeleteGame(game.g.Id, game.g.Title)">
+                                    <button class="btn btn-outline-danger">
+                                        Delete
+                                    </button>
+                                    <AntiforgeryToken />
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+@code {
+    List<VideoGame> videoGames = new List<VideoGame>();
+
+    public string message { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(1000);
+        await GetGames();
+    }
+
+    async Task DeleteGame(int id, string title)
+    {
+        message = "Deleting game: "+title;
+        var dbGame = await Context.VideoGames.FindAsync(id);
+
+        if (dbGame is not null)
+        {
+            
+            Context.Remove(dbGame);
+            await Context.SaveChangesAsync();
+            message = "game: " + dbGame.Title + " was deleted succesfully";
+            
+            await GetGames();
+                                   
+            message = "";
+        }
+
+        await Task.Delay(1000);
+    }
+
+    async Task GetGames()
+    {
+        videoGames = await Context.VideoGames.ToListAsync();
+    }
+}
