@@ -70,3 +70,6 @@ Get All Video Game Saved in Db
 
 I did use also EntityFramework to persist data from DB(Sql Server).
 
+More about the project:
+
+<a href="https://www.linkedin.com/pulse/whats-new-aspnet-core-80-blazor-sebasti%C3%A3o-de-sousa-moniz-70kxf">https://www.linkedin.com/pulse/whats-new-aspnet-core-80-blazor-sebasti%C3%A3o-de-sousa-moniz-70kxf</a>
